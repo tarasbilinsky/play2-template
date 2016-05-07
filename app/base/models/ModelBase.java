@@ -1,13 +1,12 @@
 package base.models;
 
+import base.models.annotations.TrackHistory;
 import base.models.exceptions.ModelException;
 import base.models.exceptions.TrackHistoryException;
 import com.avaje.ebean.Model;
 import com.avaje.ebean.bean.EntityBean;
-import base.models.annotations.*;
 
 import javax.persistence.MappedSuperclass;
-import javax.persistence.Transient;
 import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.List;
@@ -51,9 +50,6 @@ public abstract class ModelBase extends Model{
     @javax.persistence.GeneratedValue
     public Long id;
 
-    @Transient
-    @SuppressWarnings("unused")
-    public boolean $; //* Marker for scala
 
     public Object get (int propertyNumber) {
         return ((EntityBean)this)._ebean_getFieldIntercept(propertyNumber);

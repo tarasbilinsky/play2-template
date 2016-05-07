@@ -1,17 +1,15 @@
 package base.controllers
 
 import base.models.{PermissionBase, UserBase, UserRoleBase}
-import models.{Permission, User}
+import models.User
+import net.oltiv.scalaebean.Shortcuts._
 import play.api.mvc.Security.{AuthenticatedBuilder, AuthenticatedRequest}
 import play.api.mvc.{ActionBuilder, _}
 
 import scala.concurrent.Future
-import scala.util.{Failure, Success, Try}
-import net.oltiv.scalaebean.EbeanShortcuts._
-import net.oltiv.scalaebean.EbeanImplicits._
-import net.oltiv.scalaebean.EbeanShortcutsNonMacro._
-import play.twirl.api.{BaseScalaTemplate, Format}
 import scala.concurrent.duration._
+import scala.language.postfixOps
+import scala.util.{Failure, Success, Try}
 
 trait Secure extends ControllerBase{
 
@@ -49,8 +47,8 @@ trait Secure extends ControllerBase{
     id => Try(id.toLong) match {
       case Success(idL) =>
         env.userCache.getOrElse(id,userCachingDuration){
-          val u = new User();
-          query(u,u.id==id).fetch(props(u,u.roles)).fetch(props(u,u.permissions)).one();
+          val u = new User
+          query(u,u.id==id).fetch(props(u,u.roles)).fetch(props(u,u.permissions)).one
         }
       case Failure(_) => None
     }

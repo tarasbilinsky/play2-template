@@ -14,7 +14,7 @@ libraryDependencies ++= Seq(
   cache,
   ws,
 
-  "net.oltiv" % "scala-ebean-macros" % "0.0.2",
+  "net.oltiv" % "scala-ebean-macros" % "0.1.2",
 
   "mysql" % "mysql-connector-java" % "5.1.38",
 
