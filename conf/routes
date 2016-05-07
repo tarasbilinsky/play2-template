@@ -1,0 +1,9 @@
+GET     /                           controllers.Application.index
+GET     /assets/*file               controllers.Assets.at(path="/public", file)
+GET     /Application/reportJSError  controllers.Application.reportJSError
+GET     /auth                       controllers.Application.auth
+GET     /index2                     controllers.Application.index2
+
+GET     /index3                     controllers.Application.index3
+
+    

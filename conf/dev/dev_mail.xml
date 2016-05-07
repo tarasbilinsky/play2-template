@@ -1,0 +1,26 @@
+<included>
+
+    <appender name="EMAIL" class="ch.qos.logback.classic.net.SMTPAppender">
+           
+        <smtpHost>email-smtp.us-east-1.amazonaws.com</smtpHost>
+            <smtpPort>587</smtpPort>
+            <STARTTLS>true</STARTTLS>
+
+        <username>AKIAJLD3ICK4NM22PPQQ</username>
+        <password>An8h3AOnSZfaXmfa9EiYdjh3zhsctniwaTcbP3Z6rSJh</password>
+
+           
+        <to>tb@intteh.com</to>
+            <!--to>ANOTHER_EMAIL_DESTINATION</to--> <!-- additional destinations are possible -->
+           
+        <from>tb@intteh.com</from>
+        <subject>PlayScala Error %logger{20} - %m</subject>
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <pattern>%date %-5level %logger{45} - %message%n%xException{100}</pattern>
+        </layout>    
+
+        <bufferSize>200</bufferSize>
+         
+    </appender>
+
+</included>

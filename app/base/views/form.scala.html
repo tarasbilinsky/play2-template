@@ -1,0 +1,36 @@
+@import base.controllers.EnvironmentAll
+@import base.MyConfigImplicit.MyConfig
+@* end redundant imports *@
+
+@(
+    //?! f: HtmlForm,
+    action: String,
+    method: String="post",
+    cssClass: String = "form-horizontal",
+    cssClassLabel: String = "",
+    cssClassField: String = "",
+    saveButtonTitle: String = "Submit",
+    resetButtonTitle: String = ""
+)(implicit env: EnvironmentAll, request: Request[AnyContent])
+
+<form action="@action" method="@method" class="@cssClass" role="form">
+    <div class="form-group">
+        ?!for(
+            fld <- f.elements
+        ){
+            ?!field.render(fld)
+        }
+    </div>
+    @if(saveButtonTitle.nonEmpty || resetButtonTitle.nonEmpty){
+        <div class="form-group">
+            <div class="">
+                @if(saveButtonTitle.nonEmpty) {
+                    <button type="submit" class="btn btn-default">@saveButtonTitle</button>
+                }
+                @if(resetButtonTitle.nonEmpty) {
+                    <button type="reset" class="btn">@resetButtonTitle</button>
+                }
+            </div>
+        </div>
+    }
+</form>
