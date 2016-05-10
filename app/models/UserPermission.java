@@ -8,5 +8,5 @@ import javax.persistence.Entity;
 
 @Entity
 @Cached
-public class Permission extends PermissionBase {
+public class UserPermission extends PermissionBase {
 }

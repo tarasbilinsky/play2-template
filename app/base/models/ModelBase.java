@@ -112,6 +112,7 @@ public abstract class ModelBase extends Model{
     @Override
     @SuppressWarnings("unchecked")
     public void save(){
+        super.save();
         TrackHistory a = this.getClass().getAnnotation(TrackHistory.class);
         if(a!=null){
             ModelBase h;

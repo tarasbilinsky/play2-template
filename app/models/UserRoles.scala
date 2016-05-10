@@ -8,7 +8,7 @@ trait UserRoles {
   val Dealer = generate("Dealer")
 
 
-  private def generatePermission(sysName: String) = Lookup.find(classOf[Permission],sysName)
+  private def generatePermission(sysName: String) = Lookup.find(classOf[UserPermission],sysName)
   val EditAll = generatePermission("EditAll")
   val ViewAll = generatePermission("ViewAll")
 

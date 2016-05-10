@@ -1,7 +1,6 @@
 package base.controllers
 
-import base.models.{PermissionBase, UserBase, UserRoleBase}
-import models.User
+import base.models.{PermissionBase, UserBase, UserRoleBase, UserSessionBase}
 import net.oltiv.scalaebean.Shortcuts._
 import play.api.mvc.Security.{AuthenticatedBuilder, AuthenticatedRequest}
 import play.api.mvc.{ActionBuilder, _}
@@ -9,32 +8,34 @@ import play.api.mvc.{ActionBuilder, _}
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
+import scala.reflect.ClassTag
 import scala.util.{Failure, Success, Try}
 
-trait Secure extends ControllerBase{
+trait Secure[S<:UserSessionBase[U], U<:UserBase, R<: UserRoleBase, P<:PermissionBase] extends ControllerBase{
 
 
   private val idInSession = "id"
-  def loggedInSession(user: UserBase):(String,String) = {
-    env.userCache.set(user.id.toString,user,userCachingDuration);
-    (idInSession,user.id.toString)
+  def initSession(user: U)(implicit cS: ClassTag[S], cU: ClassTag[U]):(String,String) = {
+    val session:S = cS.runtimeClass.getDeclaredConstructor(cU.runtimeClass).newInstance(user) match {case s:S => s; case _ => throw new RuntimeException("unexpected")}
+    env.userCache.set(session.getIdString,session,userCachingDuration)
+    (idInSession,session.getIdString)
   }
 
-  def SecureActionUser(action: => UserBase => Request[AnyContent] => Result): EssentialAction =
+  def SecureActionUser(action: => U => Request[AnyContent] => Result)(implicit cS: ClassTag[S], cU: ClassTag[U]): EssentialAction =
     Security.Authenticated(getUser(_),  _ => Results.Unauthorized(notAuthorizedPage))
     { user => Action(request => action(user)(request)) }
 
   val notAuthorizedPage: play.twirl.api.HtmlFormat.Appendable = views.html.defaultpages.unauthorized()
-  val userCachingDuration: Duration  = 5 minutes
+  val userCachingDuration: Duration  = 15 seconds
 
-  def SecureActionByRole(roles: UserRoleBase*)(action: => SecureRequest[AnyContent] => Result): EssentialAction = {
+  def SecureActionByRole(roles: R*)(action: => SecureRequest[AnyContent] => Result)(implicit cS: ClassTag[S], cU: ClassTag[U]): EssentialAction = {
     SecureActionByPermissions(roles: _*)()(action)
   }
 
-  def SecureActionByPermissions(roles: UserRoleBase*)(permissions: PermissionBase*)(action: => SecureRequest[AnyContent] => Result): EssentialAction = {
+  def SecureActionByPermissions(roles: R*)(permissions: P*)(action: => SecureRequest[AnyContent] => Result)(implicit cS: ClassTag[S], cU: ClassTag[U]): EssentialAction = {
     val ab = new ActionBuilder[SecureRequest] {
       def invokeBlock[A](request: Request[A], block: (SecureRequest[A]) => Future[Result]) = {
-        AuthenticatedBuilder(getUser(roles: _*)(permissions: _*), _ => Results.Unauthorized(notAuthorizedPage)).authenticate(request, { authRequest: AuthenticatedRequest[A, UserBase] =>
+        AuthenticatedBuilder(getUser(roles: _*)(permissions: _*), _ => Results.Unauthorized(notAuthorizedPage)).authenticate(request, { authRequest: AuthenticatedRequest[A, U] =>
           block(new SecureRequest[A](authRequest.user, request))
         })
       }
@@ -42,30 +43,43 @@ trait Secure extends ControllerBase{
     ab(action)
   }
 
-  def getUser(requiredRole: UserRoleBase*)(requiredPermission: PermissionBase*)(request: RequestHeader):Option[UserBase] = {
+  def getUser(requiredRole: R*)(requiredPermission: P*)(request: RequestHeader)(implicit cS: ClassTag[S], cU: ClassTag[U]):Option[U] = {
     val user = getUser(request)
     val userWithRolePass = user.filter {user => requiredRole.exists(user.getRoles.contains(_))}
     val userWithRoleAndPermissionsPass = userWithRolePass.filter{user => user.getPermissions.containsAll(scala.collection.JavaConversions.seqAsJavaList(requiredPermission))}
     userWithRoleAndPermissionsPass
   }
 
-  def getUser(request: RequestHeader):Option[UserBase] = request.session.get(idInSession).flatMap{
-    id => Try(id.toLong) match {
-      case Success(idL) =>
-        env.userCache.getOrElse(id,userCachingDuration){
-          val u = new User
-          query(u,u.id==id,u.roles,u.permissions).one
-        }
-      case Failure(_) => None
+
+  def getSession(request: RequestHeader)(implicit cS: ClassTag[S]):Option[S] = request.session.get(idInSession).map{id:String =>
+    val s:Option[S] = env.userCache.get(id)
+    val s2:S  = s.fold{
+      val m = cS.runtimeClass.getDeclaredMethod("restore",classOf[String])
+      val resS = m.invoke(null,id) match{case s: S=> s; case _ => throw new RuntimeException}//= UserSession.restore(id)
+      env.userCache.set(resS.getIdString,resS,userCachingDuration)
+      resS
+    } (x=>x)
+    s2
+  }
+
+  def getUser(request: RequestHeader)(implicit cS: ClassTag[S]):Option[U] = {
+    getSession(request).flatMap { s2 =>
+      val res: Option[U] = Option(s2.getUser).flatMap { case u: U => Some(u); case _ => None }
+      res
     }
   }
 
-  object SecureAction extends ActionBuilder[SecureRequest] {
-    def invokeBlock[A](request: Request[A], block: (SecureRequest[A]) => Future[Result]) = {
-      AuthenticatedBuilder(getUser(_), _ => Results.Unauthorized(notAuthorizedPage)).authenticate(request, { authRequest: AuthenticatedRequest[A, UserBase] =>
+
+  def SecureAction(action: => SecureRequest[AnyContent] => Result)(implicit cS: ClassTag[S], cU: ClassTag[U]):EssentialAction = {
+    val ab = new ActionBuilder[SecureRequest] {
+
+      def invokeBlock[A](request: Request[A], block: (SecureRequest[A]) => Future[Result]) = {
+        AuthenticatedBuilder(getUser(_), _ => Results.Unauthorized(notAuthorizedPage)).authenticate(request, { authRequest: AuthenticatedRequest[A, U] =>
           block(new SecureRequest[A](authRequest.user, request))
-      })
+        })
+      }
     }
+    ab(action)
   }
 
 }
