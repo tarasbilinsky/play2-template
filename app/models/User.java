@@ -28,6 +28,6 @@ public class User extends UserBase {
 
     @Override
     public UserRoleBase getPrimaryRole() {
-        return null;//TODO
+        return roles==null || roles.isEmpty()?null:roles.iterator().next();
     }
 }

@@ -20,42 +20,38 @@ public abstract class Lookup extends ModelBase {
     public int orderNumber;
     public boolean active;
 
-    private static final Map<Class<? extends Lookup>,Map<Long,Lookup>> cache = new ConcurrentHashMap<>();
-    private static final Map<Class<? extends Lookup>,Map<String,Lookup>> cacheSysName = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<Class<? extends Lookup>,Map<Long,Lookup>> cache = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<Class<? extends Lookup>,Map<String,Lookup>> cacheSysName = new ConcurrentHashMap<>();
+
+    @Override
+    public String toString(){
+        return title;
+    }
 
 
     public static <T extends Lookup> T find (Class<T> clazz, String sysName){
         if(StringUtils.isBlank(sysName)) throw new LookupException("Trying to find with empty SysName");
         if(clazz==null) throw new LookupException("Trying to find with null Class");
         sysName = sysName.toLowerCase();
-        if(clazz.getAnnotation(Cached.class)!=null){
-            Map<String,Lookup> m = cacheSysName.get(clazz);
-            if(m!=null){
-                Lookup r = m.get(sysName);
-                if(r==null){
-                    T rr = Ebean.createQuery(clazz).where().eq("sysName",sysName).findUnique();
-                    if(rr !=null){
-                        m.put(rr.sysName,rr);
-                        return rr;
-                    } else {
-                        throw new LookupException("Sysname "+sysName+" not found");
-                    }
+        if(clazz.getAnnotation(Cached.class)!=null) {
+            Map<String, Lookup> m = cacheSysName.get(clazz);
+            if(m==null){
+                m = new ConcurrentHashMap<>();
+                cacheSysName.put(clazz, m);
+            }
+            Lookup r = m.get(sysName);
+            if (r == null) {
+                T rr = Ebean.createQuery(clazz).where().eq("sysName", sysName).findUnique();
+                if (rr != null) {
+                    m.put(rr.sysName, rr);
+                    return rr;
                 } else {
-                    @SuppressWarnings("unchecked")
-                    T res = (T)r;
-                    return res;
+                    throw new LookupException("Sysname " + sysName + " not found");
                 }
             } else {
-                List<T> rr = Ebean.createQuery(clazz).select("*").order("sysName").findList();
-                cacheSysName.put(clazz, new ConcurrentHashMap<>());
-                T r = null;
-                for(T t: rr){
-                    String s = t.sysName.toLowerCase();
-                    m.put(s,t);
-                    if(s.equals(sysName)) r = t;
-                }
-                if(r == null) throw new LookupException("Sysname "+sysName+" not found");
-                else return r;
+                @SuppressWarnings("unchecked")
+                T res = (T) r;
+                return res;
             }
         } else {
             return Ebean.createQuery(clazz).where().eq("sysName",sysName).findUnique();
@@ -66,33 +62,26 @@ public abstract class Lookup extends ModelBase {
         if(clazz==null) throw new LookupException("Trying to find with null Class");
         if(id==null || id==0L) throw new LookupException("Trying to find with empty Id");
         if(clazz.getAnnotation(Cached.class)!=null){
-            Map<Long,Lookup> m = cache.get(clazz);
-            if(m!=null){
-                Lookup r = m.get(id);
-                if(r==null){
-                    T rr = Ebean.createQuery(clazz).where().idEq(id).findUnique();
-                    if(rr !=null){
-                        m.put(rr.id,rr);
-                        return rr;
-                    } else {
-                        throw new LookupException("Id "+id+" not found");
-                    }
+            Map<Long, Lookup> m = cache.get(clazz);
+            if(m==null){
+                m = new ConcurrentHashMap<>();
+                cache.put(clazz, m);
+            }
+            Lookup r = m.get(id);
+            if(r==null){
+                T rr = Ebean.createQuery(clazz).where().idEq(id).findUnique();
+                if(rr !=null){
+                    m.put(rr.id,rr);
+                    return rr;
                 } else {
-                    @SuppressWarnings("unchecked")
-                    T res = (T)r;
-                    return res;
+                    throw new LookupException("Id "+id+" not found");
                 }
             } else {
-                List<T> rr = Ebean.createQuery(clazz).select("*").order("sysName").findList();
-                cacheSysName.put(clazz, new ConcurrentHashMap<>());
-                T r = null;
-                for(T t: rr){
-                    m.put(t.id,t);
-                    if(t.id.equals(id)) r = t;
-                }
-                if(r == null) throw new LookupException("Id "+id+" not found");
-                else return r;
+                @SuppressWarnings("unchecked")
+                T res = (T)r;
+                return res;
             }
+
         } else {
             return Ebean.createQuery(clazz).where().idEq(id).findUnique();
         }

@@ -14,7 +14,7 @@ libraryDependencies ++= Seq(
   cache,
   ws,
 
-  "net.oltiv" % "scala-ebean-macros" % "0.1.2",
+  "net.oltiv" % "scala-ebean-macros" % "0.1.8",
 
   "mysql" % "mysql-connector-java" % "5.1.38",
 
@@ -40,6 +40,9 @@ TwirlKeys.templateImports in Compile ++= Seq(
   "base.controllers.ControllerCrud"
 )
 
+includeFilter in (Assets, LessKeys.less) := "dev.less" | "main.less"
+
+ivyLoggingLevel := UpdateLogging.Quiet
 
 
 

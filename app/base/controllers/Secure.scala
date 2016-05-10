@@ -14,6 +14,12 @@ import scala.util.{Failure, Success, Try}
 trait Secure extends ControllerBase{
 
 
+  private val idInSession = "id"
+  def loggedInSession(user: UserBase):(String,String) = {
+    env.userCache.set(user.id.toString,user,userCachingDuration);
+    (idInSession,user.id.toString)
+  }
+
   def SecureActionUser(action: => UserBase => Request[AnyContent] => Result): EssentialAction =
     Security.Authenticated(getUser(_),  _ => Results.Unauthorized(notAuthorizedPage))
     { user => Action(request => action(user)(request)) }
@@ -43,18 +49,16 @@ trait Secure extends ControllerBase{
     userWithRoleAndPermissionsPass
   }
 
-  def getUser(request: RequestHeader):Option[UserBase] = request.session.get("id").flatMap{
+  def getUser(request: RequestHeader):Option[UserBase] = request.session.get(idInSession).flatMap{
     id => Try(id.toLong) match {
       case Success(idL) =>
         env.userCache.getOrElse(id,userCachingDuration){
           val u = new User
-          query(u,u.id==id).fetch(props(u,u.roles)).fetch(props(u,u.permissions)).one
+          query(u,u.id==id,u.roles,u.permissions).one
         }
       case Failure(_) => None
     }
   }
-
-  class SecureRequest[A](val user: UserBase, request: Request[A]) extends WrappedRequest[A](request)
 
   object SecureAction extends ActionBuilder[SecureRequest] {
     def invokeBlock[A](request: Request[A], block: (SecureRequest[A]) => Future[Result]) = {
@@ -64,5 +68,8 @@ trait Secure extends ControllerBase{
     }
   }
 
-
 }
+
+class SecureRequest[A](val user: UserBase, request: Request[A]) extends WrappedRequest[A](request)
+
+

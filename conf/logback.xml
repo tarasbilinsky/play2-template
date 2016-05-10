@@ -1,48 +1,26 @@
 <configuration>
-
-
-
     <conversionRule conversionWord="coloredLevel" converterClass="play.api.libs.logback.ColoredLevel" />
-
-
-
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-
         <encoder>
-
             <pattern>%coloredLevel %date %logger{45} - %message%n%xException{100}</pattern>
-
         </encoder>
-
     </appender>
-
 
     <include resource="dev_mail.xml"/>
 
-
-
     <logger name="play" level="DEBUG" />
-
     <logger name="application" level="DEBUG" />
-
-
     <logger name="org.avaje.ebean.SQL" level="TRACE"/>
-
     <logger name="org.avaje.ebean.SUM" level="TRACE"/>
 
     <!--logger name="com.avaje.ebeanShortcuts.config.PropertyMapLoader" level="OFF"/>
-
     <logger name="com.avaje.ebeanShortcuts.config.PropertyMapLoader" level="DEBUG"/>
-
     <logger name="com.avaje.ebeaninternal.server.lib.BackgroundThread" level="OFF" />
-
     <logger name="com.gargoylesoftware.htmlunit.javascript" level="OFF" /-->
 
     <logger name="com.amazonaws.services.s3.AmazonS3Client" level="OFF" />
 
-
     <logger name="akka" level="INFO" />
-
 
     <root level="WARN">
         <appender-ref ref="STDOUT" />

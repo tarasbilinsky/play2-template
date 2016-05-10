@@ -10,6 +10,8 @@ import java.util.Set;
 public abstract class UserBase extends ModelBase {
     public String name;
 
+    public String password;
+
     public Set<? extends UserRoleBase> getRoles(){return new HashSet<>();}
 
     public Set<? extends PermissionBase> getPermissions(){return new HashSet<>();}

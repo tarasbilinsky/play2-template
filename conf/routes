@@ -1,9 +1,16 @@
-GET     /                           controllers.Application.index
-GET     /assets/*file               controllers.Assets.at(path="/public", file)
-GET     /Application/reportJSError  controllers.Application.reportJSError
-GET     /auth                       controllers.Application.auth
-GET     /index2                     controllers.Application.index2
+GET        /                                 controllers.Application.index
+GET        /assets/*file                     controllers.Assets.at(path="/public", file)
+GET        /Application/reportJSError        controllers.Application.reportJSError
+GET        /auth                             controllers.Application.auth(userName,password)
+GET        /login                            controllers.Application.login
+GET        /logout                           controllers.Application.logout
 
-GET     /index3                     controllers.Application.index3
+GET        /index2                           controllers.Application.index2
+GET        /index3                           controllers.Application.index3
 
-    
+
+GET        /dealers/                         controllers.Dealers.index
+
+
+GET        /feeds/                           controllers.Feeds.index
+GET        /feeds/status/id                  controllers.Feeds.status(id: Long)
