@@ -1,4 +1,5 @@
 @import base.controllers.EnvironmentAll
+@import base.models.UserBase
 @import base.MyConfigImplicit.MyConfig
 @import base.controllers.RequestWrapperForTemplates._
 @()(implicit env: EnvironmentAll, request: Request[AnyContent])
@@ -12,7 +13,7 @@
 
 
   ga('send', 'pageview'
-      @request.getUser.map { user =>
+      @request.getUser.map { user:UserBase =>
           , {
               'dimension1': '@{JavaScriptFormat.escape(user.name)}',
               'dimension2': '@{JavaScriptFormat.escape(user.getPrimaryRole().toString)}'

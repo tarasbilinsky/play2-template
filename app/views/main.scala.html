@@ -2,8 +2,8 @@
 @import base.MyConfigImplicit.MyConfig
 @import base.controllers.SecureRequest
 @import base.controllers.MayBeSecureRequest
-@import base.controllers.RequestWrapperForTemplates._
-
+@import base.models.UserBase
+@import base.controllers.RequestWrapperForTemplates.requestToGenericRequest
 @*------------------------------------*@
 @(
         title: String,
@@ -63,7 +63,7 @@
             }
         </ul>
 
-        @request.getUser.map{ user =>
+        @request.getUser.map{ user:User =>
             <ul class="nav navbar-nav pull-xs-right">
                 <li class=nav-item>
                     <a class="nav-link" href="/logout">

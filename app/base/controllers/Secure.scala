@@ -10,6 +10,8 @@ import scala.concurrent.duration._
 import scala.language.postfixOps
 import scala.reflect.ClassTag
 import scala.util.{Failure, Success, Try}
+import scala.language.implicitConversions
+
 
 trait Secure[S<:UserSessionBase[U], U<:UserBase, R<: UserRoleBase, P<:PermissionBase] extends ControllerBase{
 
@@ -18,41 +20,44 @@ trait Secure[S<:UserSessionBase[U], U<:UserBase, R<: UserRoleBase, P<:Permission
     */
 
   val notAuthorizedPage: play.twirl.api.HtmlFormat.Appendable = views.html.defaultpages.unauthorized()
-  val userCachingDuration: Duration  = 15 seconds
+  val userCachingDuration: Duration  = 5 minutes
   private val idInSession = "id"
 
   /****
     * Secure Actions
     */
 
-  def Action(action: => MayBeSecureRequest[AnyContent] => Result)(implicit cS: ClassTag[S], cU: ClassTag[U]):EssentialAction ={
-    val ab = new ActionBuilder[MayBeSecureRequest] with ActionTransformer[Request, MayBeSecureRequest] {
+  type MRQ[A] = MayBeSecureRequest[A,U]
+  type SRQ[A] = SecureRequest[A,U]
+
+  def Action(action: => MRQ[AnyContent] => Result)(implicit cS: ClassTag[S], cU: ClassTag[U]):EssentialAction ={
+    val ab = new ActionBuilder[MRQ] with ActionTransformer[Request, MRQ] {
       def transform[A](request: Request[A]) = Future.successful {
         new MayBeSecureRequest(getUser(request), request)
       }
     }
     ab(action)
   }
-  def SecureAction(action: => SecureRequest[AnyContent] => Result)(implicit cS: ClassTag[S], cU: ClassTag[U]):EssentialAction = {
-    val ab = new ActionBuilder[SecureRequest] {
-      def invokeBlock[A](request: Request[A], block: (SecureRequest[A]) => Future[Result]) = {
+  def SecureAction(action: => SRQ[AnyContent] => Result)(implicit cS: ClassTag[S], cU: ClassTag[U]):EssentialAction = {
+    val ab = new ActionBuilder[SRQ] {
+      def invokeBlock[A](request: Request[A], block: (SRQ[A]) => Future[Result]) = {
         AuthenticatedBuilder(getUser(_), _ => Results.Unauthorized(notAuthorizedPage)).authenticate(request, { authRequest: AuthenticatedRequest[A, U] =>
-          block(new SecureRequest[A](authRequest.user, request))
+          block( (new SecureRequest[A,U](authRequest.user, request)).asInstanceOf[SRQ[A]])
         })
       }
     }
     ab(action)
   }
 
-  def SecureActionByRole(roles: R*)(action: => SecureRequest[AnyContent] => Result)(implicit cS: ClassTag[S], cU: ClassTag[U]): EssentialAction = {
+  def SecureActionByRole(roles: R*)(action: => SRQ[AnyContent] => Result)(implicit cS: ClassTag[S], cU: ClassTag[U]): EssentialAction = {
     SecureActionByPermissions(roles: _*)()(action)
   }
 
-  def SecureActionByPermissions(roles: R*)(permissions: P*)(action: => SecureRequest[AnyContent] => Result)(implicit cS: ClassTag[S], cU: ClassTag[U]): EssentialAction = {
-    val ab = new ActionBuilder[SecureRequest] {
-      def invokeBlock[A](request: Request[A], block: (SecureRequest[A]) => Future[Result]) = {
+  def SecureActionByPermissions(roles: R*)(permissions: P*)(action: => SRQ[AnyContent] => Result)(implicit cS: ClassTag[S], cU: ClassTag[U]): EssentialAction = {
+    val ab = new ActionBuilder[SRQ] {
+      def invokeBlock[A](request: Request[A], block: (SRQ[A]) => Future[Result]) = {
         AuthenticatedBuilder(getUser(roles: _*)(permissions: _*), _ => Results.Unauthorized(notAuthorizedPage)).authenticate(request, { authRequest: AuthenticatedRequest[A, U] =>
-          block(new SecureRequest[A](authRequest.user, request))
+          block( (new SecureRequest[A,U](authRequest.user, request)).asInstanceOf[SRQ[A]])
         })
       }
     }
@@ -98,19 +103,19 @@ trait Secure[S<:UserSessionBase[U], U<:UserBase, R<: UserRoleBase, P<:Permission
 
 }
 
-class SecureRequest[A](val user: UserBase, request: Request[A]) extends WrappedRequest[A](request)
+class SecureRequest[A, U<:UserBase](val user: U, request: Request[A]) extends WrappedRequest[A](request)
 
-class MayBeSecureRequest[A](val user: Option[UserBase], request: Request[A]) extends WrappedRequest[A](request)
+class MayBeSecureRequest[A, U<:UserBase](val user: Option[U], request: Request[A]) extends WrappedRequest[A](request)
 
 object RequestWrapperForTemplates{
-  class GenericRequest[A](request: Request[A]){
-    def getUser:Option[UserBase] = request match {
-      case sr:SecureRequest[A] => Some(sr.user)
-      case mr:MayBeSecureRequest[A] => mr.user
+  class GenericRequest[A,U](request: Request[A]){
+    def getUser[U]:Option[U] = request match {
+      case sr:SecureRequest[A,U] => Some(sr.user)
+      case mr:MayBeSecureRequest[A,U] => mr.user
       case _ => None
     }
   }
-  implicit def requestToGenericRequest[AnyContent](request: Request[AnyContent]):GenericRequest[AnyContent] = new GenericRequest[AnyContent](request)
+  implicit def requestToGenericRequest[AnyContent,U](request: Request[AnyContent]):GenericRequest[AnyContent,U] = new GenericRequest[AnyContent,U](request)
 }
 
 

@@ -2,6 +2,7 @@
 @import base.MyConfigImplicit.MyConfig
 @import base.controllers.RequestWrapperForTemplates._
 @import org.apache.commons.lang3.StringEscapeUtils
+@import base.models.UserBase
 @()(implicit env: EnvironmentAll, request: Request[AnyContent])
 <script>
 	window.onerror = function(msg, url, linenumber) {
@@ -36,7 +37,7 @@
 		    return xmlhttp;
 		}
 
-	    var user = "@request.getUser.fold("no user")(user => StringEscapeUtils.escapeEcmaScript(user.name+" "+user.getPrimaryRole().toString()))";
+	    var user = "@request.getUser[UserBase].fold("no user")(user => StringEscapeUtils.escapeEcmaScript(user.name+" "+user.getPrimaryRole().toString()))";
 
 
 	    sendRequest(

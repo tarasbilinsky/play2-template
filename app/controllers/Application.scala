@@ -15,10 +15,10 @@ class Application @Inject() (implicit env: EnvironmentAll) extends ControllerBas
   override val userCachingDuration  = Duration.Inf
 
   def index:EA = SecureAction{implicit request =>
-    val x = request match{
-      case r: SecureRequest[AnyContent] => true
-      case _ => false
-    }
+
+    import base.controllers.RequestWrapperForTemplates.requestToGenericRequest;
+    val u = request.getUser
+
     Ok(views.html.application.index(query(PH.user).seq))
   }
 
