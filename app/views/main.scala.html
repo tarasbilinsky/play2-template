@@ -1,6 +1,9 @@
 @import base.controllers.EnvironmentAll
 @import base.MyConfigImplicit.MyConfig
 @import base.controllers.SecureRequest
+@import base.controllers.MayBeSecureRequest
+@import base.controllers.GetUser
+
 @*------------------------------------*@
 @(
         title: String,
@@ -58,15 +61,18 @@
                     }
                 </li>
             }
-
         </ul>
-        @request match {
-            case r: SecureRequest[AnyContent] => {
-                <ul class="nav navbar-nav pull-xs-right">
-                    <li class=nav-item><a class="nav-link" href="/logout">@r.user.name - @r.user.getPrimaryRole() - Log Out</a></li>
-                </ul>
-            }
-            case _ => {}
+
+        @GetUser(request).map{ user =>
+            <ul class="nav navbar-nav pull-xs-right">
+                <li class=nav-item>
+                    <a class="nav-link" href="/logout">
+                        @user.name
+                        - @user.getPrimaryRole()
+                        - Log Out
+                    </a>
+                </li>
+            </ul>
         }
     </nav>
     <div class="container">

@@ -1,8 +1,6 @@
 package base
 
 import base.utils.Throttle
-import base.utils.Throttle.Result._
-import base.utils.Throttle
 import play.api.Logger
 import play.api.libs.mailer.{Email, MailerClient}
 

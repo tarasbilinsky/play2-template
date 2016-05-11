@@ -1,14 +1,13 @@
 package base.models;
 
-import com.avaje.ebean.Ebean;
-import com.avaje.ebean.annotation.Transactional;
 import base.models.annotations.AutoSysName;
 import base.models.annotations.Cached;
 import base.models.exceptions.LookupException;
+import com.avaje.ebean.Ebean;
+import com.avaje.ebean.annotation.Transactional;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.persistence.MappedSuperclass;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 

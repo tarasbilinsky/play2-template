@@ -24,6 +24,15 @@ trait Secure[S<:UserSessionBase[U], U<:UserBase, R<: UserRoleBase, P<:Permission
   /****
     * Secure Actions
     */
+
+  def Action(action: => MayBeSecureRequest[AnyContent] => Result)(implicit cS: ClassTag[S], cU: ClassTag[U]):EssentialAction ={
+    val ab = new ActionBuilder[MayBeSecureRequest] with ActionTransformer[Request, MayBeSecureRequest] {
+      def transform[A](request: Request[A]) = Future.successful {
+        new MayBeSecureRequest(getUser(request), request)
+      }
+    }
+    ab(action)
+  }
   def SecureAction(action: => SecureRequest[AnyContent] => Result)(implicit cS: ClassTag[S], cU: ClassTag[U]):EssentialAction = {
     val ab = new ActionBuilder[SecureRequest] {
       def invokeBlock[A](request: Request[A], block: (SecureRequest[A]) => Future[Result]) = {
@@ -84,14 +93,21 @@ trait Secure[S<:UserSessionBase[U], U<:UserBase, R<: UserRoleBase, P<:Permission
   }
 
   def getUser(request: RequestHeader)(implicit cS: ClassTag[S]):Option[U] = {
-    getSession(request).flatMap { s2 =>
-      val res: Option[U] = Option(s2.getUser).flatMap { case u: U => Some(u); case _ => None }
-      res
-    }
+    getSession(request).flatMap{s2 => Option(s2.getUser)}
   }
 
 }
 
 class SecureRequest[A](val user: UserBase, request: Request[A]) extends WrappedRequest[A](request)
+
+class MayBeSecureRequest[A](val user: Option[UserBase], request: Request[A]) extends WrappedRequest[A](request)
+
+object GetUser{
+  def apply[A](request: Request[A]):Option[UserBase] = request match {
+    case sr:SecureRequest[A] => Some(sr.user)
+    case mr:MayBeSecureRequest[A] => mr.user
+  }
+}
+
 
 

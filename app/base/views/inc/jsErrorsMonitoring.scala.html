@@ -1,7 +1,7 @@
 @import base.controllers.EnvironmentAll
 @import base.MyConfigImplicit.MyConfig
-@* end redundant imports *@
-
+@import base.controllers.GetUser
+@import org.apache.commons.lang3.StringEscapeUtils
 @()(implicit env: EnvironmentAll, request: Request[AnyContent])
 <script>
 	window.onerror = function(msg, url, linenumber) {
@@ -36,10 +36,11 @@
 		    return xmlhttp;
 		}
 
-	    var user = "?!requestGetUser.map(u=>s'${u.id} ${formatJs(u.name)}').getOrElse('no user')";
+	    var user = "@GetUser(request).fold("no user")(user => StringEscapeUtils.escapeEcmaScript(user.name+" "+user.getPrimaryRole().toString()))";
+
 
 	    sendRequest(
-	    		   "@env.config.errorMonitoring.jsErrorMonitoringRoute",
+	    		   "@{env.config.errorMonitoring.jsErrorMonitoringRoute}",
 	    			{
 	    			    message: msg,
 	    				user: user,
