@@ -37,7 +37,7 @@
 		    return xmlhttp;
 		}
 
-	    var user = "@request.getUser[UserBase].fold("no user")(user => StringEscapeUtils.escapeEcmaScript(user.name+" "+user.getPrimaryRole().toString()))";
+	    var user = "@request.getUser.fold("no user")(user => StringEscapeUtils.escapeEcmaScript(user.name+" "+user.getPrimaryRole().toString()))";
 
 
 	    sendRequest(

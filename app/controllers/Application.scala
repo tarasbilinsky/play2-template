@@ -3,6 +3,7 @@ package controllers
 import javax.inject.Inject
 
 import base.controllers.{ControllerBase, EnvironmentAll, Secure, SecureRequest}
+import base.models.UserBase
 import models.{ModelPlaceholders => PH, _}
 import net.oltiv.scalaebean.Shortcuts._
 import play.api.mvc._
@@ -17,7 +18,8 @@ class Application @Inject() (implicit env: EnvironmentAll) extends ControllerBas
   def index:EA = SecureAction{implicit request =>
 
     import base.controllers.RequestWrapperForTemplates.requestToGenericRequest;
-    val u = request.getUser
+    val u = request.getUser.map{u=> 1}
+
 
     Ok(views.html.application.index(query(PH.user).seq))
   }
