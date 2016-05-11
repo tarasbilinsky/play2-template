@@ -2,7 +2,7 @@
 @import base.MyConfigImplicit.MyConfig
 @import base.controllers.SecureRequest
 @import base.controllers.MayBeSecureRequest
-@import base.controllers.GetUser
+@import base.controllers.RequestWrapperForTemplates._
 
 @*------------------------------------*@
 @(
@@ -63,7 +63,7 @@
             }
         </ul>
 
-        @GetUser(request).map{ user =>
+        @request.getUser.map{ user =>
             <ul class="nav navbar-nav pull-xs-right">
                 <li class=nav-item>
                     <a class="nav-link" href="/logout">

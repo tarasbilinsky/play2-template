@@ -36,7 +36,9 @@ sourceDirectories in (Compile, TwirlKeys.compileTemplates) := (unmanagedSourceDi
 TwirlKeys.templateImports in Compile ++= Seq(
   "models._",
   "base.MyConfigImplicit.MyConfig",
-  "base.controllers._")
+  "base.controllers._",
+  "base.controllers.RequestWrapperForTemplates._"
+)
 
 includeFilter in (Assets, LessKeys.less) := "dev.less" | "main.less"
 

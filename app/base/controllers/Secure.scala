@@ -102,12 +102,18 @@ class SecureRequest[A](val user: UserBase, request: Request[A]) extends WrappedR
 
 class MayBeSecureRequest[A](val user: Option[UserBase], request: Request[A]) extends WrappedRequest[A](request)
 
-object GetUser{
-  def apply[A](request: Request[A]):Option[UserBase] = request match {
-    case sr:SecureRequest[A] => Some(sr.user)
-    case mr:MayBeSecureRequest[A] => mr.user
+object RequestWrapperForTemplates{
+  class GenericRequest[A](request: Request[A]){
+    def getUser:Option[UserBase] = request match {
+      case sr:SecureRequest[A] => Some(sr.user)
+      case mr:MayBeSecureRequest[A] => mr.user
+      case _ => None
+    }
   }
+  implicit def requestToGenericRequest[AnyContent](request: Request[AnyContent]):GenericRequest[AnyContent] = new GenericRequest[AnyContent](request)
 }
+
+
 
 
 

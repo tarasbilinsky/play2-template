@@ -1,6 +1,6 @@
 @import base.controllers.EnvironmentAll
 @import base.MyConfigImplicit.MyConfig
-@import base.controllers.GetUser
+@import base.controllers.RequestWrapperForTemplates._
 @import org.apache.commons.lang3.StringEscapeUtils
 @()(implicit env: EnvironmentAll, request: Request[AnyContent])
 <script>
@@ -36,7 +36,7 @@
 		    return xmlhttp;
 		}
 
-	    var user = "@GetUser(request).fold("no user")(user => StringEscapeUtils.escapeEcmaScript(user.name+" "+user.getPrimaryRole().toString()))";
+	    var user = "@request.getUser.fold("no user")(user => StringEscapeUtils.escapeEcmaScript(user.name+" "+user.getPrimaryRole().toString()))";
 
 
 	    sendRequest(
