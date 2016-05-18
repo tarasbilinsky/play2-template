@@ -17,7 +17,7 @@ class Application @Inject() (implicit env: EnvironmentAll) extends ControllerBas
 
   def index:EA = SecureAction{implicit request =>
 
-    import base.controllers.RequestWrapperForTemplates.requestToGenericRequest;
+    import base.controllers.RequestWrapperForTemplates.requestToGenericRequest
     val u = request.getUser.map{u=> 1}
 
 
@@ -30,7 +30,7 @@ class Application @Inject() (implicit env: EnvironmentAll) extends ControllerBas
   }
 
   def logout:EA = Action{implicit request =>
-    getSession(request).map{_.close()}
+    getSession(request).foreach{_.close()}
     Ok(views.html.application.login()).withSession()
   }
 

@@ -15,4 +15,5 @@ dist
 /.settings
 conf/prod
 aws.conf
+*.sc
     
