@@ -21,8 +21,8 @@ class Job(nextRunIn: FiniteDuration, every: Duration = Duration.Inf, val key: (A
     }
   }
 
-  protected def beforeRun:Unit = ()
-  protected def afterRun:Unit = ()
+  protected def beforeRun():Unit = ()
+  protected def afterRun():Unit = ()
 
   val scheduled = scheduler{
 
@@ -51,7 +51,7 @@ object CancelPrevious{
 trait CancelPrevious{self:Job =>
   if(key==null) throw new Exception("Job Cancel Previous - Key is required")
   CancelPrevious.putNewAndCancelPrevious(key, scheduled)
-  override def afterRun: Unit = {
+  override def afterRun(): Unit = {
     CancelPrevious.remove(key)
   }
 }

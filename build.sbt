@@ -6,7 +6,7 @@ lazy val `play` = (project in file(".")).enablePlugins(PlayScala,PlayEbean)
 
 scalaVersion := "2.11.8"
 ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) }
-scalacOptions ++= Seq("-feature","-unchecked","-deprecation")
+scalacOptions ++= Seq("-feature","-unchecked","-deprecation","-Xlint:unsound-match","-Xfatal-warnings","-Yno-adapted-args")
 javacOptions in Compile ++= Seq("-Xlint:unchecked", "-Xlint:deprecation")
 
 libraryDependencies ++= Seq(

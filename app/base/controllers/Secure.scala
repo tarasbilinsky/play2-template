@@ -115,7 +115,7 @@ object RequestWrapperForTemplates{
       case _ => None
     }
   }
-  implicit def requestToGenericRequest[AnyContent](request: Request[AnyContent]):GenericRequest[AnyContent] = new GenericRequest[AnyContent](request)
+  implicit def requestToGenericRequest[A](request: Request[A]):GenericRequest[A] = new GenericRequest[A](request)
 }
 
 
