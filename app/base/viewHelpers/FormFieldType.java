@@ -6,7 +6,7 @@ import javax.persistence.Lob;
 import java.lang.reflect.Field;
 
 public enum FormFieldType {
-    TextInput,TextArea,HtmlEdit,HtmlView,TextView,SelectBox,RadioButtons,Checkboxes,YesNo,Hidden,TextViewWithHiddenId,PasswordInput,NotDefined;
+    NotDefined,TextInput,TextArea,HtmlEdit,HtmlView,TextView,SelectBox,RadioButtons,Checkboxes,YesNo,Hidden,TextViewWithHiddenId,PasswordInput;
     public static FormFieldType defaultForType(Field f){
         Class<?> cls = f.getType();
         if(cls.equals(boolean.class) || cls.isAssignableFrom(Boolean.class)) return YesNo;

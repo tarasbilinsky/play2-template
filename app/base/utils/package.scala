@@ -32,4 +32,6 @@ package object utils {
         throw e
     }
   }
+
+  def emptyStringToNone(s: String):Option[String] = if(s.isEmpty) None else Some(s)
 }

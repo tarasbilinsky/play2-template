@@ -6,8 +6,15 @@ lazy val `play` = (project in file(".")).enablePlugins(PlayScala,PlayEbean)
 
 scalaVersion := "2.11.8"
 ivyScala := ivyScala.value map { _.copy(overrideScalaVersion = true) }
-scalacOptions ++= Seq("-feature","-unchecked","-deprecation","-Xlint:unsound-match","-Xfatal-warnings","-Yno-adapted-args")
+scalacOptions ++= Seq("-feature","-unchecked","-deprecation","-Xlint:unsound-match",
+  //"-Xfatal-warnings",
+  //"-Ylog-classpath",
+  "-Yno-adapted-args")
 javacOptions in Compile ++= Seq("-Xlint:unchecked", "-Xlint:deprecation")
+
+incOptions := incOptions.value.withNameHashing(true)
+updateOptions := updateOptions.value.withCachedResolution(true)
+
 
 libraryDependencies ++= Seq(
   jdbc,
@@ -27,8 +34,12 @@ libraryDependencies ++= Seq(
   "org.apache.commons" % "commons-email" % "1.4",
   "com.typesafe.play" %% "play-mailer" % "3.0.1",
 
+  "org.scalamock" %% "scalamock-scalatest-support" % "3.2.2" % "test",
   "org.scalatestplus.play" %% "scalatestplus-play" % "1.5.0" % "test",
-  "org.avaje" % "avaje-agentloader" % "2.1.2" % "test"
+  "org.scalacheck" %% "scalacheck" % "1.13.0" % "test",
+  "org.avaje" % "avaje-agentloader" % "2.1.2" % "test",
+
+  "com.ibm.icu" % "icu4j" % "54.1.1"
 )
 
 
@@ -43,6 +54,13 @@ TwirlKeys.templateImports in Compile ++= Seq(
 includeFilter in (Assets, LessKeys.less) := "dev.less" | "main.less"
 
 ivyLoggingLevel := UpdateLogging.Quiet
+
+/*
+coverageEnabled := false
+coverageExcludedPackages := "<empty>;Reverse.*;.*AuthService.*;models\\.data\\..*"
+coverageMinimum := 80
+coverageFailOnMinimum := false
+*/
 
 
 

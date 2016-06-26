@@ -8,6 +8,7 @@ import play.test.Helpers._
 import play.twirl.api.Content
 import org.avaje.agentloader
 import org.avaje.agentloader.AgentLoader
+import org.scalacheck.Properties
 import org.scalatest.TestData
 import play.api.cache.EhCacheModule
 import play.api.libs.ws.WSClient
@@ -16,64 +17,57 @@ import play.api.routing.Router
 import play.api.test.FutureAwaits
 import play.mvc.Http.Response
 import play.mvc.Result
-
 import org.scalatest._
 import org.scalatestplus.play._
-
 import play.api.test._
+import org.scalatest.FlatSpec
+import org.scalatest.ShouldMatchers
+import org.scalamock.scalatest.MockFactory
+import org.scalatest.prop.PropertyChecks
 
-class ExampleSpec extends PlaySpec with OneAppPerSuite {
+import org.scalatest.junit.JUnitSuite
+import org.scalatest.prop.Checkers
+import org.scalacheck.Arbitrary._
+import org.scalacheck.Prop._
 
-  implicit override lazy val app = new GuiceApplicationBuilder().configure(Map("ehcacheplugin" -> "disabled")).build()
+import org.scalacheck.Prop.forAll
 
-  val enhancerOn = AgentLoader.loadAgentFromClasspath("avaje-ebeanorm-agent","debug=1;packages=base.models.**,models.**")
+trait ATestInterface{
+  def aTrue:Boolean
+}
 
-  "The OneAppPerSuite trait" should {
-    "provide an Application" in {
-      app.configuration.getString("ehcacheplugin") mustBe Some("disabled")
+class ATestWithMock extends FlatSpec with MockFactory //with PropertyChecks
+{
+
+  "Test" should "mock" in {
+    val aMock: ATestInterface = mock[ATestInterface]
+
+    (aMock.aTrue _).expects().returning(true)
+    assert(aMock.aTrue)
+
+  /*
+    forAll { (a: String, b:String) =>
+      assert(a.length+b.length==(a+b).length)
     }
-    "start the Application" in {
-      Play.maybeApplication mustBe Some(app)
-    }
-  }
+    */
 
 
-  "Ebean" should {
-    "provide data" in {
-
-      if (!enhancerOn) {
-        fail
-      }
-
-      val m: User = new User()
-      //val v: Html = views.html.index.render(query(m).seq)
-      //contentAsString("") must include ("3")
-    }
+    // ...
   }
 }
 
-class ExampleSpec2 extends PlaySpec with OneServerPerTest with DefaultAwaitTimeout with FutureAwaits{
+object StringSpecification extends Properties("String") {
 
-  override lazy val port: Int = 9888
-  override def newAppForTest(testData: TestData) =
-  new GuiceApplicationBuilder().disable[EhCacheModule]
-    //.router(Router.from {
-    //  case GET => Action { Results.Ok("ok") }
-    //}
-    //)
-  .build()
-
-  "The OneServerPerTest trait" must {
-    "test server logic" in {
-      val wsClient = app.injector.instanceOf[WSClient]
-      val myPublicAddress =  s"localhost:$port"
-      val testPaymentGatewayURL = s"http://$myPublicAddress"
-      // The test payment gateway requires a callback to this server before it returns a result...
-      val callbackURL = s"http://$myPublicAddress/callback"
-      // await is from play.api.test.FutureAwaits
-      val response = await(wsClient.url(testPaymentGatewayURL).withQueryString("callbackURL" -> callbackURL).get())
-
-      response.status mustBe (200)
-    }
+  property("startsWith") = forAll { (a: String, b: String) =>
+    (a+b).startsWith(a)
   }
+
+  property("concatenate") = forAll { (a: String, b: String) =>
+    (a+b).length >= b.length
+  }
+
+  property("substring") = forAll { (a: String, b: String, c: String) =>
+    (a+b+c).substring(a.length, a.length+b.length) == b
+  }
+
 }

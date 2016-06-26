@@ -1,3 +1,3 @@
 package base.models.enums;
 
-public enum SearchType {Equals,Contains,StartsWith,EndWith}
+public enum SearchType { None,Equals,Contains,StartsWith, EndsWith}
