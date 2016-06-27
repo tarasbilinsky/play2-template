@@ -5,7 +5,7 @@ import java.util
 import javax.persistence.{Lob, ManyToMany}
 
 import base.models.{Lookup, ModelBase}
-import base.models.annotations.{FieldMeta, FieldMetaOptionsSource}
+import base.models.annotations.{FieldMeta, FieldMetaFormat, FieldMetaOptionsSource}
 import base.utils
 import base.utils.Titles
 import play.api.libs.json.{JsArray, JsBoolean, JsNull, JsNumber, JsObject, JsString, JsUndefined, JsValue}
@@ -13,11 +13,9 @@ import net.oltiv.scalaebean.Shortcuts._
 
 import scala.collection.mutable
 import FormFieldType._
-import base.models.enums.AlignType
+import base.models.enums.{AlignType, FormatType}
 import com.avaje.ebean.{Ebean, Expr, Expression, Model, Query}
 import models.ModelPlaceholders._
-
-
 import ClassAdditions._
 
 case class FieldValueId(val id: Any){require(id!=null)}
@@ -31,6 +29,8 @@ case class Field( val name: String,
                   var valueId: Option[FieldValueId] = None,
                   var options: Option[Seq[FieldOption]] = None,
                   var align: Option[AlignType] = None,
+                  var formatType: Option[FormatType] = None,
+                  var format: Option[String] = None,
                   var hint: Option[String] = None,
                   val extra: Option[Map[String,String]] = None
                 ){
@@ -56,6 +56,9 @@ case class Field( val name: String,
 
   def getAlign:AlignType = align.getOrElse(AlignType.Left)
 
+  def getFormatType:FormatType = formatType.getOrElse(FormatType.Text)
+  def getFormat:String = format.getOrElse("")
+
   def isOptionSelected(o: FieldOption):Boolean = o.id==getValueId
 
   def getHint:String = hint.getOrElse("")
@@ -65,8 +68,10 @@ case class Field( val name: String,
 class BoundField(name: String, val model: ModelBase, val modelField: java.lang.reflect.Field) extends Field(name) {
   require(model!=null && name!=null && modelField!=null)
 
+  private val modelFieldType = modelField.getType
   private lazy val fieldMeta = Option(modelField.getAnnotation(classOf[FieldMeta]))
   private lazy val fieldMetaOptionsSource = Option(modelField.getAnnotation(classOf[FieldMetaOptionsSource]))
+  private lazy val fieldMetaFormat = Option(modelField.getAnnotation(classOf[FieldMetaFormat]))
 
   override def getTitle:String = title.getOrElse(fieldMeta.fold(super.getTitle){
     m=>
@@ -111,11 +116,48 @@ class BoundField(name: String, val model: ModelBase, val modelField: java.lang.r
 
   override def getAlign:AlignType = evalIfNone(align,valueAndAlignLoad._2)
 
+  import FormatType._
+  private def formatTypeLoad: FormatType = modelFieldType match {
+    case x if x.isDate => DateTime
+    case x if x.isInt => Integer
+    case x if x.isNumber => Number
+    case x if Option(modelField.getAnnotation(classOf[Lob])).isDefined => TextMultiline
+    case _ => Text
+  }
+
+  private def formatLoad: String = getFormatType match {
+    case DateTime => "MM/dd/yyyy hh:mmaa"//TODO
+    case Number => ".2"//TODO
+    case Integer => "d"//TODO
+    case _ => ""
+  }
+
+  override def getFormatType:FormatType = evalIfNone(
+    formatType,
+    {
+      val v = fieldMetaFormat.fold
+      {formatTypeLoad}
+      {m => val t = m.`type`; if(t == FormatType.Undefined) formatTypeLoad else t};formatType = Some(v);v}
+  )
+
+  override def getFormat:String = evalIfNone(
+    format,
+    {
+      val v = fieldMetaFormat.fold {formatLoad}{vv => val vf = vv.format(); if(vf.isEmpty) formatLoad else vf}
+      format = Some(v)
+      v
+    }
+  )
+
   override def getOptions: Seq[FieldOption] = evalIfNone(options,{
-    val o: Seq[FieldOption] = modelField.getType match {
+    val o: Seq[FieldOption] = modelFieldType match {
       case x if x.isLookup => {
-        val q = query(x,classOf[Lookup]).select(props(lookup,lookup.id,lookup.title)).where().eq(props(lookup,lookup.active),true).orderBy(props(lookup,lookup.orderNumber))
-        q.seq.map{mm=> new FieldOption(FieldValueId(mm.id),mm.title)}
+        val q = query(x,classOf[Lookup])
+          .select(props(lookup,lookup.id,lookup.title))
+          .where()
+          .eq(props(lookup,lookup.active),true)
+          .orderBy(props(lookup,lookup.orderNumber))
+        q.seq.map{mm => new FieldOption(FieldValueId(mm.id),mm.title)}
       }
       case x if x.isEnum => x.getDeclaredFields.filter(y => y.getType == x).zipWithIndex.map{ case (f,id) =>
         def defaultTitle = Titles.camelCaseToTitle(f.getName)
@@ -141,7 +183,7 @@ class BoundField(name: String, val model: ModelBase, val modelField: java.lang.r
       case _ => Nil
 
     }
-    options = Some(o) //TODO or None
+    options = Some(o)
     o
   })
 

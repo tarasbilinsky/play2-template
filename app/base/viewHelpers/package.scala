@@ -11,11 +11,14 @@ package object viewHelpers {
     implicit def classAdditions(x: Class[_]): EnhancedClassOf = new EnhancedClassOf(x)
 
     class EnhancedClassOf(x: Class[_]) {
-      def isBoolean = classOf[Boolean].isAssignableFrom(x) || classOf[java.lang.Boolean].isAssignableFrom(x)
-      def isModelBase = classOf[ModelBase].isAssignableFrom(x)
-      def isLookup = classOf[Lookup].isAssignableFrom(x)
-      def isLong = classOf[Long].isAssignableFrom(x) || classOf[java.lang.Long].isAssignableFrom(x)
-      def isDate = classOf[Date].isAssignableFrom(x)
+      def isOfType(cls:Class[_]):Boolean = cls.isAssignableFrom(x)
+      def isBoolean = isOfType(classOf[Boolean]) || isOfType(classOf[java.lang.Boolean])
+      def isModelBase = isOfType(classOf[ModelBase])
+      def isLookup = isOfType(classOf[Lookup])
+      def isLong = isOfType(classOf[Long]) || isOfType(classOf[java.lang.Long])
+      def isDate = isOfType(classOf[Date])
+      def isInt = isOfType(classOf[java.lang.Integer])
+      def isNumber = isOfType(classOf[java.lang.Double]) || isOfType(classOf[java.lang.Float])
     }
   }
   import ClassAdditions._

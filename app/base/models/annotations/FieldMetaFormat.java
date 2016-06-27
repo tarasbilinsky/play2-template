@@ -12,6 +12,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD})
 public @interface FieldMetaFormat {
-    FormatType type() default FormatType.Text;
+    FormatType type() default FormatType.Undefined;
     String format() default "";
 }
