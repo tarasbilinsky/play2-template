@@ -95,8 +95,8 @@ public abstract class Lookup extends ModelBase {
                 while(Ebean.createQuery(this.getClass()).where().eq("sysName",sysName+(i==0?"":i)).findRowCount()>0) i++;
                 if(i>0) sysName = sysName+i;
             }
-            super.save();
         }
+        super.save();
     }
 
 }

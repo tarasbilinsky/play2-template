@@ -12,6 +12,8 @@ public abstract class UserBase extends ModelBase {
 
     public String password;
 
+    public boolean active = true;
+
     public Set<? extends UserRoleBase> getRoles(){return new HashSet<>();}
 
     public Set<? extends PermissionBase> getPermissions(){return new HashSet<>();}

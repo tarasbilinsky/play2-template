@@ -1,14 +1,34 @@
 package base.viewHelpers
 
-import base.models.ModelBase
-import base.models.annotations.FieldMeta
+import scala.language.implicitConversions
+import java.util
+import javax.persistence.Lob
+
+import base.models.{Lookup, ModelBase}
+import base.models.annotations.{FieldMeta, FieldMetaOptionsSource}
 import base.utils
 import base.utils.Titles
 import play.api.libs.json.{JsArray, JsBoolean, JsNull, JsNumber, JsObject, JsString, JsUndefined, JsValue}
+import net.oltiv.scalaebean.Shortcuts._
 
 import scala.collection.mutable
+import FormFieldType._
+import com.avaje.ebean.{Ebean, Expr, Expression, Model, Query}
+import models.ModelPlaceholders._
 
-case class FieldValueId(val id: Object){require(id!=null)}
+object ClassAdditions {
+  implicit def classAdditions(x: Class[_]): EnhancedClassOf = new EnhancedClassOf(x)
+
+  class EnhancedClassOf(x: Class[_]) {
+    def isBoolean = classOf[Boolean].isAssignableFrom(x) || classOf[java.lang.Boolean].isAssignableFrom(x)
+    def isModelBase = classOf[ModelBase].isAssignableFrom(x)
+    def isLookup = classOf[Lookup].isAssignableFrom(x)
+    def isLong = classOf[Long].isAssignableFrom(x) || classOf[java.lang.Long].isAssignableFrom(x)
+  }
+}
+import ClassAdditions._
+
+case class FieldValueId(val id: Any){require(id!=null)}
 
 class FieldOption(val id: FieldValueId, val title: String){require(title!=null)}
 
@@ -40,6 +60,9 @@ case class Field( val name: String,
   def getValue:String = value.getOrElse("")
   def getValueId:FieldValueId = valueId.getOrElse(FieldValueId(""))
   def getOptions:Seq[FieldOption] = options.getOrElse(Nil)
+
+  def isOptionSelected(o: FieldOption):Boolean = o.id==getValueId
+
   def getHint:String = hint.getOrElse("")
   def getExtra:Map[String,String] = extra.getOrElse(Map.empty)
 }
@@ -48,6 +71,8 @@ class BoundField(name: String, val model: ModelBase, val modelField: java.lang.r
   require(model!=null && name!=null && modelField!=null)
 
   private lazy val fieldMeta = Option(modelField.getAnnotation(classOf[FieldMeta]))
+  private lazy val fieldMetaOptionsSource = Option(modelField.getAnnotation(classOf[FieldMetaOptionsSource]))
+
   override def getTitle:String = title.getOrElse(fieldMeta.fold(super.getTitle){
     m=>
       val metaTitle = m.title()
@@ -58,30 +83,69 @@ class BoundField(name: String, val model: ModelBase, val modelField: java.lang.r
 
   })
 
-  override def getFieldType:FormFieldType = fieldType.getOrElse(fieldMeta.fold{
-    super.getFieldType //TODO default field type according to the modelFieldType
-  }{
-    m=>
-      val t = m.formFieldType()
-      if(t == FormFieldType.NotDefined) super.getFieldType else {
-        fieldType = Some(t)
-        t
+  override def getFieldType:FormFieldType = {
+    def getFieldTypeFromType:FormFieldType = {
+      modelField.getType match {
+        case x if x.isModelBase => SelectBox
+        case x if x.isBoolean => RadioButtons
+        case x if x.isEnum => RadioButtons
+        //TODO Many to many sets, lists, etc to checkboxes
+        case _ => Option(modelField.getAnnotation(classOf[Lob])).fold(TextInput){_=>TextArea}
       }
-  })
+    }
+    fieldType.getOrElse(fieldMeta.fold {
+      getFieldTypeFromType
+    } {
+      m =>
+        val t = m.formFieldType()
+        val t2 = if (t == FormFieldType.NotDefined) getFieldTypeFromType else t
+        fieldType = Some(t2)
+        t2
+    })
+  }
 
-  override def getValue:String = evalIfNone(value, {val v = model.get(name).toString; value = Some(v); v}) //TODO Formatting value
+  override def getValue:String = evalIfNone(value, {val v = model.get(name).toString; value = Some(v); v}) //TODO Formatting value instead of just toString
 
   override def getValueId:FieldValueId = evalIfNone(valueId, {val v = FieldValueId(model.get(name)); valueId = Some(v); v})
 
+
   override def getOptions: Seq[FieldOption] = evalIfNone(options,{
-    val o: Seq[FieldOption] = Nil //TODO Read reflection fields info and meta, create options
+    val o: Seq[FieldOption] = modelField.getType match {
+      case x if x.isLookup => {
+        val q = query(x,classOf[Lookup]).select(props(lookup,lookup.id,lookup.title)).where().eq(props(lookup,lookup.active),true).orderBy(props(lookup,lookup.orderNumber))
+        q.seq.map{mm=> new FieldOption(FieldValueId(mm.id),mm.title)}
+      }
+      case x if x.isEnum => x.getDeclaredFields.filter(y => y.getType == x).zipWithIndex.map{ case (f,id) =>
+        def defaultTitle = Titles.camelCaseToTitle(f.getName)
+        val title: String = Option(f.getAnnotation(classOf[FieldMeta])).fold(defaultTitle){m =>
+          val t = m.title()
+          if(t.isEmpty) defaultTitle else t
+        }
+        new FieldOption(FieldValueId(id-1), title)
+      }
+      case x if x.isBoolean => {
+        Seq(new FieldOption(FieldValueId(1), "Yes"), new FieldOption(FieldValueId(0), "No"))
+      }
+      case x if x.isLong || x.isModelBase && fieldMetaOptionsSource.isDefined => {
+        fieldMetaOptionsSource.map {
+          case m if !m.rawSql().isEmpty => query(fieldMetaOptionsSource.get.rawSql()).seq.map { o => new FieldOption(FieldValueId(o.getLong("id")), o.getString("name")) }
+          case m if m.model() != classOf[ModelBase] =>
+            val filter: Expression = if (m.activeOnly()) Expr.eq("active", true) else if (!m.rawFilter().isEmpty) Expr.raw(m.rawFilter()) else Expr.raw("1=1")
+            query(m.model(), classOf[ModelBase]).select(s"${m.titleColumn},id").having(filter).orderBy(m.orderColumn() + (if (m.orderDescending()) " desc" else "asc"))
+              .seq.map { o => new FieldOption(FieldValueId(o.id), o.get(m.titleColumn()).toString) }
+        }.get
+      }
+
+      case _ => Nil
+
+    }
     options = Some(o) //TODO or None
     o
   })
 
   override def getHint: String = hint.getOrElse(fieldMeta.fold(super.getHint){_.hint()})
 
-  override def getExtra: Map[String, String] = super.getExtra //TODO maybe some extra from meta
+  override def getExtra: Map[String, String] = super.getExtra //TODO-LATER maybe some extra from meta
 
 }
 
@@ -96,7 +160,8 @@ object  Field{
       Field(model,mf)
     }
   }
-  private [viewHelpers] def apply(model: ModelBase, mf: java.lang.reflect.Field):Field = {
+  //private [viewHelpers]
+  def apply(model: ModelBase, mf: java.lang.reflect.Field):BoundField = {
     val f = mf.getName
     new BoundField(f, model, mf)
   }
@@ -132,8 +197,6 @@ class FormView [+T >: ModelBase] private [this] (val name: Option[String], model
 }
 
 object FormView{
-
-
 
   def loadFromParams[T >: ModelBase](cls: Class[T], name: String = "")(implicit request: play.api.mvc.Request[_]):T = ???
 

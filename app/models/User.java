@@ -11,6 +11,7 @@ import java.util.Set;
 public class User extends UserBase {
     public String name;
     public UserRole primaryRole;
+
     @ManyToMany
     public Set<UserRole> roles;
     @ManyToMany

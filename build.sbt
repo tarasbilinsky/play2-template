@@ -21,7 +21,7 @@ libraryDependencies ++= Seq(
   cache,
   ws,
 
-  "net.oltiv" % "scala-ebean-macros" % "0.1.8",
+  "net.oltiv" % "scala-ebean-macros" % "0.1.9",
 
   "mysql" % "mysql-connector-java" % "5.1.38",
 
@@ -30,6 +30,7 @@ libraryDependencies ++= Seq(
   "com.sun.mail" % "mailapi" % "1.5.5",
   "com.sun.mail" % "smtp" % "1.5.5",
   "ch.qos.logback" % "logback-access" % "1.1.7",
+  "ch.qos.logback" % "logback-classic" % "1.1.7",
 
   "org.apache.commons" % "commons-email" % "1.4",
   "com.typesafe.play" %% "play-mailer" % "3.0.1",
