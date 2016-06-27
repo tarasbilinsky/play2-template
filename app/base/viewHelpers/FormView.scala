@@ -2,7 +2,7 @@ package base.viewHelpers
 
 import scala.language.implicitConversions
 import java.util
-import javax.persistence.Lob
+import javax.persistence.{Lob, ManyToMany}
 
 import base.models.{Lookup, ModelBase}
 import base.models.annotations.{FieldMeta, FieldMetaOptionsSource}
@@ -13,19 +13,11 @@ import net.oltiv.scalaebean.Shortcuts._
 
 import scala.collection.mutable
 import FormFieldType._
+import base.models.enums.AlignType
 import com.avaje.ebean.{Ebean, Expr, Expression, Model, Query}
 import models.ModelPlaceholders._
 
-object ClassAdditions {
-  implicit def classAdditions(x: Class[_]): EnhancedClassOf = new EnhancedClassOf(x)
 
-  class EnhancedClassOf(x: Class[_]) {
-    def isBoolean = classOf[Boolean].isAssignableFrom(x) || classOf[java.lang.Boolean].isAssignableFrom(x)
-    def isModelBase = classOf[ModelBase].isAssignableFrom(x)
-    def isLookup = classOf[Lookup].isAssignableFrom(x)
-    def isLong = classOf[Long].isAssignableFrom(x) || classOf[java.lang.Long].isAssignableFrom(x)
-  }
-}
 import ClassAdditions._
 
 case class FieldValueId(val id: Any){require(id!=null)}
@@ -38,6 +30,7 @@ case class Field( val name: String,
                   var value: Option[String] = None,
                   var valueId: Option[FieldValueId] = None,
                   var options: Option[Seq[FieldOption]] = None,
+                  var align: Option[AlignType] = None,
                   var hint: Option[String] = None,
                   val extra: Option[Map[String,String]] = None
                 ){
@@ -60,6 +53,8 @@ case class Field( val name: String,
   def getValue:String = value.getOrElse("")
   def getValueId:FieldValueId = valueId.getOrElse(FieldValueId(""))
   def getOptions:Seq[FieldOption] = options.getOrElse(Nil)
+
+  def getAlign:AlignType = align.getOrElse(AlignType.Left)
 
   def isOptionSelected(o: FieldOption):Boolean = o.id==getValueId
 
@@ -89,7 +84,7 @@ class BoundField(name: String, val model: ModelBase, val modelField: java.lang.r
         case x if x.isModelBase => SelectBox
         case x if x.isBoolean => RadioButtons
         case x if x.isEnum => RadioButtons
-        //TODO Many to many sets, lists, etc to checkboxes
+        case _ if Option(modelField.getAnnotation(classOf[ManyToMany])).isDefined => Checkboxes
         case _ => Option(modelField.getAnnotation(classOf[Lob])).fold(TextInput){_=>TextArea}
       }
     }
@@ -104,10 +99,17 @@ class BoundField(name: String, val model: ModelBase, val modelField: java.lang.r
     })
   }
 
-  override def getValue:String = evalIfNone(value, {val v = model.get(name).toString; value = Some(v); v}) //TODO Formatting value instead of just toString
+  private def valueAndAlignLoad = {
+    val (v,a) = formatField(model,modelField)
+    value = Some(v); align = Some(a)
+    (v,a)
+  }
+
+  override def getValue:String = evalIfNone(value, valueAndAlignLoad._1)
 
   override def getValueId:FieldValueId = evalIfNone(valueId, {val v = FieldValueId(model.get(name)); valueId = Some(v); v})
 
+  override def getAlign:AlignType = evalIfNone(align,valueAndAlignLoad._2)
 
   override def getOptions: Seq[FieldOption] = evalIfNone(options,{
     val o: Seq[FieldOption] = modelField.getType match {
@@ -198,7 +200,7 @@ class FormView [+T >: ModelBase] private [this] (val name: Option[String], model
 
 object FormView{
 
-  def loadFromParams[T >: ModelBase](cls: Class[T], name: String = "")(implicit request: play.api.mvc.Request[_]):T = ???
+  def loadFromParams[T](cls: Class[T], name: String = "")(implicit request: play.api.mvc.Request[_]):T = ???
 
   private def getParams(request: play.api.mvc.Request[_]):Map[String, Array[String]] =  {
     val a = ((request.body match {

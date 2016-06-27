@@ -1,5 +1,6 @@
 package formView
 
+import base.models.enums.AlignType
 import base.viewHelpers.{BoundField, Field, FormFieldType, FormView}
 import models.ModelPlaceholders._
 import models.{User, UserRole}
@@ -10,6 +11,7 @@ import org.scalatest.FlatSpec
 class FormViewTest extends FlatSpec{
   base.utils.test.setUpTestORM()
   val u = new User
+
   def userField(n: String):BoundField = Field(u,classOf[User].getField(n))
 
 
@@ -53,6 +55,17 @@ class FormViewTest extends FlatSpec{
     val options = ft.getOptions
     assert(options.size==3)
     assert(options(2).title=="Blue!!!")
+  }
+
+  "Field format boolean value" should "work" in {
+    u.active = true
+    val f = userField(props(user,user.active))
+    assert(f.getValue == "Yes")
+    assert(f.getAlign == AlignType.Center)
+    u.active = false
+    val f2 = userField(props(user,user.active))
+    assert(f2.getValue == "No")
+
   }
 
 }

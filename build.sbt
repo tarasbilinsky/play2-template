@@ -22,6 +22,7 @@ libraryDependencies ++= Seq(
   ws,
 
   "net.oltiv" % "scala-ebean-macros" % "0.1.9",
+  "org.avaje.ebeanorm" % "avaje-ebeanorm" % "7.16.1",
 
   "mysql" % "mysql-connector-java" % "5.1.38",
 

@@ -1,5 +1,6 @@
 package base.models.annotations;
 
+import base.models.enums.FormatType;
 import base.models.enums.SearchType;
 import base.viewHelpers.FormFieldType;
 
@@ -10,9 +11,7 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD})
-public @interface FieldMeta {
-    String title() default "";
-    FormFieldType formFieldType() default FormFieldType.NotDefined;
-    String hint() default "";
-    SearchType searchType() default SearchType.None;
+public @interface FieldMetaFormat {
+    FormatType type() default FormatType.Text;
+    String format() default "";
 }
