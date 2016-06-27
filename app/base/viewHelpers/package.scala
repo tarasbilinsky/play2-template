@@ -4,21 +4,23 @@ import java.util.Date
 
 import base.models.{Lookup, ModelBase}
 import base.models.enums.AlignType
+
 import scala.language.implicitConversions
+import scala.reflect.ClassTag
 
 package object viewHelpers {
   object ClassAdditions {
     implicit def classAdditions(x: Class[_]): EnhancedClassOf = new EnhancedClassOf(x)
 
     class EnhancedClassOf(x: Class[_]) {
-      def isOfType(cls:Class[_]):Boolean = cls.isAssignableFrom(x)
-      def isBoolean = isOfType(classOf[Boolean]) || isOfType(classOf[java.lang.Boolean])
-      def isModelBase = isOfType(classOf[ModelBase])
-      def isLookup = isOfType(classOf[Lookup])
-      def isLong = isOfType(classOf[Long]) || isOfType(classOf[java.lang.Long])
-      def isDate = isOfType(classOf[Date])
-      def isInt = isOfType(classOf[java.lang.Integer])
-      def isNumber = isOfType(classOf[java.lang.Double]) || isOfType(classOf[java.lang.Float])
+      def isOfType[T](implicit cls: ClassTag[T]):Boolean = cls.runtimeClass.isAssignableFrom(x)
+      def isBoolean = isOfType[Boolean]|| isOfType[java.lang.Boolean]
+      def isModelBase = isOfType[ModelBase]
+      def isLookup = isOfType[Lookup]
+      def isLong = isOfType[Long] || isOfType[java.lang.Long]
+      def isDate = isOfType[Date]
+      def isInt = isOfType[java.lang.Integer]
+      def isNumber = isOfType[java.lang.Double] || isOfType[java.lang.Float]
     }
   }
   import ClassAdditions._
