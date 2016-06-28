@@ -126,9 +126,10 @@ class BoundField(name: String, val model: ModelBase, val modelField: java.lang.r
   }
 
   private def formatLoad: String = getFormatType match {
-    case DateTime => "MM/dd/yyyy hh:mmaa"//TODO
-    case Number => "###,###,###,###.00"//TODO
-    case Integer => "d"//TODO
+    case DateTime => "MM/dd/yyyy hh:mmaa"
+    case Number => "###,###,###,###.##"
+    case Money =>  "¤###,###,###,###.##"
+    case Integer => ""
     case _ => ""
   }
 
@@ -194,23 +195,23 @@ class BoundField(name: String, val model: ModelBase, val modelField: java.lang.r
 }
 
 
-object  Field{
-  private [viewHelpers] def apply(modelOption: Option[ModelBase], f: String):Field = {
-    modelOption.fold{
+object  Field {
+  private[viewHelpers] def apply(modelOption: Option[ModelBase], f: String): Field = {
+    modelOption.fold {
       Field(f)
-    }
-    { model =>
+    } { model =>
       val mf = model.getClass.getDeclaredField(f)
-      Field(model,mf)
+      Field(model, mf)
     }
   }
-  //private [viewHelpers]
-  def apply(model: ModelBase, mf: java.lang.reflect.Field):BoundField = {
+
+  def apply(model: ModelBase, mf: java.lang.reflect.Field): BoundField = {
     val f = mf.getName
     new BoundField(f, model, mf)
   }
-}
 
+  def apply(model: ModelBase, f: String): BoundField = apply(model, model.getClass.getDeclaredField(f))
+}
 
 class FormView [+T >: ModelBase] private [this] (val name: Option[String], model: Option[T] = None, fields: mutable.LinkedHashMap[String,Field] = mutable.LinkedHashMap()) {
 

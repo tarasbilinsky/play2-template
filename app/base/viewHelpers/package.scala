@@ -34,7 +34,7 @@ package object viewHelpers {
   def formatField(model: ModelBase, field: java.lang.reflect.Field, formatType: FormatType, format: String):(String,AlignType) = {
     val fieldName = field.getName
     def getAs[T]:T = model.get(fieldName).asInstanceOf[T]
-    def getAs2[T](cls: Class[T]):T = model.get(fieldName).asInstanceOf[T]
+    def getAsAny[T](cls: Class[T]):T = model.get(fieldName).asInstanceOf[T]
     def protectNull(a: Any, fmt: Any=>String):String = Option(a).fold("")(fmt(_))
     field.getType match {
       case x if x.isBoolean => (if(getAs[Boolean]) "Yes" else "No",AlignType.Center)
@@ -46,7 +46,11 @@ package object viewHelpers {
       }
       case x if x.isNumber => {
         val f = new DecimalFormat(format)
-        val v = protectNull(getAs2(x),x=>f.format(x).replaceAll("\\.0*$",""))
+        def formatInner(x: Any):String = {
+          val v1 = f.format(x)
+          v1
+        }
+        val v = protectNull(getAsAny(x),formatInner)
         (v,AlignType.Right)
       }
 

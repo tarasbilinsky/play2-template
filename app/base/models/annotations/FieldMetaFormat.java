@@ -14,4 +14,5 @@ import java.lang.annotation.Target;
 public @interface FieldMetaFormat {
     FormatType type() default FormatType.Undefined;
     String format() default "";
+    boolean hideZeroesAfterDotInNumber() default true;
 }

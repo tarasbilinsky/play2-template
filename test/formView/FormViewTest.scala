@@ -66,6 +66,21 @@ class FormViewTest extends FlatSpec{
     }
   }
 
+  "Format money" should "work" in {
+    val t = new Test1
+
+    t.money = 34.55
+
+    val f = Field(t,props(t,t.money))
+
+    assert(f.getValue=="$34.55")
+
+    t.money2 = 3.00
+
+    val f2 = Field(t,props(t,t.money2))
+    assert(f2.getValue == "3.00")
+  }
+
 
   "Field options" should "work for enums" in {
     val t = new Test1
