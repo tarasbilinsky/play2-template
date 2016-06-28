@@ -75,6 +75,10 @@ class FormViewTest extends FlatSpec{
 
     assert(f.getValue=="$34.55")
 
+    t.money = 45.00
+    val f3 = Field(t, props(t,t.money))
+    assert(f3.getValue=="$45")
+
     t.money2 = 3.00
 
     val f2 = Field(t,props(t,t.money2))
