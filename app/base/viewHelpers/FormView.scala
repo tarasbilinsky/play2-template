@@ -105,7 +105,7 @@ class BoundField(name: String, val model: ModelBase, val modelField: java.lang.r
   }
 
   private def valueAndAlignLoad = {
-    val (v,a) = formatField(model,modelField)
+    val (v,a) = formatField(model,modelField,getFormatType,getFormat)
     value = Some(v); align = Some(a)
     (v,a)
   }
@@ -127,7 +127,7 @@ class BoundField(name: String, val model: ModelBase, val modelField: java.lang.r
 
   private def formatLoad: String = getFormatType match {
     case DateTime => "MM/dd/yyyy hh:mmaa"//TODO
-    case Number => ".2"//TODO
+    case Number => "###,###,###,###.00"//TODO
     case Integer => "d"//TODO
     case _ => ""
   }

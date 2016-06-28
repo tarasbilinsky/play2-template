@@ -48,6 +48,24 @@ class FormViewTest extends FlatSpec{
     assert(f2.getOptions.size>0)
   }
 
+  "Format number with no meta" should "work" in {
+    val t = new Test1
+
+    List( (2.14556,"2.15"), (-2.14556,"-2.15"), (3.00,"3") ).foreach { case (n, s) =>
+      t.a = n
+      val f = Field(t, classOf[Test1].getDeclaredField(props(t, t.a)))
+      assert(f.getValue == s)
+
+      t.b = n.asInstanceOf[Float]
+      val f2 = Field(t, classOf[Test1].getDeclaredField(props(t, t.b)))
+      assert(f2.getValue == s)
+
+      val f3 = Field(t, classOf[Test1].getDeclaredField(props(t, t.c)))
+      assert(f3.getValue=="")
+
+    }
+  }
+
 
   "Field options" should "work for enums" in {
     val t = new Test1
