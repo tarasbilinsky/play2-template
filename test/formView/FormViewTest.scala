@@ -2,6 +2,7 @@ package formView
 
 import base.models.enums.AlignType
 import base.viewHelpers.{BoundField, Field, FormFieldType, FormView}
+import com.avaje.ebean.common.BeanSet
 import models.ModelPlaceholders._
 import models.{User, UserRole}
 import models.test.{Color, Test1}
@@ -14,6 +15,12 @@ class FormViewTest extends FlatSpec{
 
   def userField(n: String):BoundField = Field(u,classOf[User].getField(n))
 
+/*  "BeanSet" should "work" in {
+    assert(
+      user.getClass.getDeclaredField("roles").getType == classOf[BeanSet[_]]
+    )
+  }*/
+
 
   "Form View" should "work" in {
     val x = new FormView(Seq(Field("A")),"test")
@@ -21,7 +28,7 @@ class FormViewTest extends FlatSpec{
 
     val f1 = Field("name")
     val f2 = Field(new User(), classOf[User].getDeclaredField("name"))
-    val f3 = Field(new User(), classOf[User].getDeclaredField("primaryRole"))
+    val f3 = Field(new User(), classOf[User].getDeclaredField("primaryUserRole"))
 
     assert(f1==f2)
     assert(f1!=f3)
@@ -31,7 +38,7 @@ class FormViewTest extends FlatSpec{
     val f = userField(props(user,user.name))
     assert(f.getFieldType==FormFieldType.TextInput)
 
-    val f2 = userField(props(user,user.primaryRole))
+    val f2 = userField(props(user,user.primaryUserRole))
     assert(f2.getFieldType==FormFieldType.SelectBox)
 
     val f3 = userField(props(user,user.active))
@@ -39,7 +46,7 @@ class FormViewTest extends FlatSpec{
   }
 
   "Field options" should "work for lookups" in {
-    val f2 = userField(props(user,user.primaryRole))
+    val f2 = userField(props(user,user.primaryUserRole))
     val r = new UserRole
     r.active = true
     r.sysName = "test"
@@ -54,14 +61,14 @@ class FormViewTest extends FlatSpec{
     List( (2.14556,"2.15"), (-2.14556,"-2.15"), (3.00,"3") ).foreach { case (n, s) =>
       t.a = n
       val f = Field(t, classOf[Test1].getDeclaredField(props(t, t.a)))
-      assert(f.getValue == s)
+      assert(f.getValueView == s)
 
       t.b = n.asInstanceOf[Float]
       val f2 = Field(t, classOf[Test1].getDeclaredField(props(t, t.b)))
-      assert(f2.getValue == s)
+      assert(f2.getValueView == s)
 
       val f3 = Field(t, classOf[Test1].getDeclaredField(props(t, t.c)))
-      assert(f3.getValue=="")
+      assert(f3.getValueView=="")
 
     }
   }
@@ -73,16 +80,16 @@ class FormViewTest extends FlatSpec{
 
     val f = Field(t,props(t,t.money))
 
-    assert(f.getValue=="$34.55")
+    assert(f.getValueView=="$34.55")
 
     t.money = 45.00
     val f3 = Field(t, props(t,t.money))
-    assert(f3.getValue=="$45")
+    assert(f3.getValueView=="$45")
 
     t.money2 = 3.00
 
     val f2 = Field(t,props(t,t.money2))
-    assert(f2.getValue == "3.00")
+    assert(f2.getValueView == "3.00")
   }
 
 
@@ -97,11 +104,11 @@ class FormViewTest extends FlatSpec{
   "Field format boolean value" should "work" in {
     u.active = true
     val f = userField(props(user,user.active))
-    assert(f.getValue == "Yes")
+    assert(f.getValueView == "Yes")
     assert(f.getAlign == AlignType.Center)
     u.active = false
     val f2 = userField(props(user,user.active))
-    assert(f2.getValue == "No")
+    assert(f2.getValueView == "No")
 
   }
 

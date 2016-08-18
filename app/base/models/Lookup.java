@@ -92,7 +92,7 @@ public abstract class Lookup extends ModelBase {
             if(StringUtils.isBlank(sysName)){
                 sysName = title.toLowerCase().replaceAll("[^0-9a-zA-Z_-]","");
                 int i = 0;
-                while(Ebean.createQuery(this.getClass()).where().eq("sysName",sysName+(i==0?"":i)).findRowCount()>0) i++;
+                while(Ebean.createQuery(this.getClass()).where().eq("sysName",sysName+(i==0?"":i)).findCount()>0) i++;
                 if(i>0) sysName = sysName+i;
             }
         }

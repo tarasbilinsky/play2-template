@@ -1,0 +1,59 @@
+@import base.controllers.EnvironmentAll
+@import base.MyConfigImplicit.MyConfig
+@import base.models.ModelBase
+@import base.viewHelpers._
+@import base.viewHelpers.FormFieldType._
+@(field: Field, form: FormView[_])(implicit env: EnvironmentAll, request: Request[AnyContent])
+
+@textInput(name:String, tpe: String) = {
+    @for(valueView <- Some(field.getValueView)){
+        <input name="@name" id="@name" type="@tpe" value="@valueView">
+    }
+}
+
+@optionsInput(name:String, selectedText: String)(b: (String,String,String,String)=>Html) = {
+    @for(value <- Some(field.getValue.value)){
+        @for(o<-field.getOptions; valueId=o.v.id; inputId=s"${name}_${valueId}"; selected=if(o.isSelectedFor(value)) selectedText else ""){
+            @b(inputId,o.title,valueId,selected)
+        }
+    }
+}
+
+@for(fieldName<-Some(field.name); name=form.fieldNamePrefix+fieldName){
+    @field.getTitle
+
+
+    @field.getFieldType match {
+        case TextInput =>  {@textInput(name,"text")}
+        case Checkboxes => {
+            @optionsInput(name,"checked"){(id,title,valueId,checked) =>
+                <label for="@id">@title</label><input name="@name" id="@id" value="@valueId" type="checkbox" @checked>
+            }
+            <input name="@name" id="@{name}_" value="" type="hidden">
+        }
+        case Hidden => {@textInput(name,"hidden")}
+        case HtmlEdit => {//TODO}
+        case HtmlView => {@Html(field.getValueView)}
+        case PasswordInput => {@textInput(name,"password")}
+        case RadioButtons => {
+            @optionsInput(name,"checked"){(id,title,valueId,checked) =>
+                <label for="@id">@title</label><input name="@name" id="@id" value="@valueId" type="radio" @checked>
+            }
+        }
+        case SelectBox => {
+            <select name="@name" id="@name">
+            @optionsInput(name,"selected"){(_,title,valueId,selected) =>
+                <option value="@valueId" @selected>@title</option>
+            }
+            </select>
+        }
+        case TextArea => {
+            <textarea name="@name" id="@name">@field.getValueView</textarea>
+        }
+        case TextView => {@field.getValueView}
+        case TextViewWithHiddenId => {@field.getValueView @textInput(name,"hidden")}
+        case NotDefined => {}
+    }
+}
+
+

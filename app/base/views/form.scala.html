@@ -1,25 +1,22 @@
 @import base.controllers.EnvironmentAll
 @import base.MyConfigImplicit.MyConfig
-@* end redundant imports *@
-
+@import base.models.ModelBase
+@import base.viewHelpers._
 @(
-    //?! f: HtmlForm,
+    f: FormView[ModelBase],
     action: String,
-    method: String="post",
+    formMethod: String = "post",
     cssClass: String = "form-horizontal",
     cssClassLabel: String = "",
     cssClassField: String = "",
     saveButtonTitle: String = "Submit",
-    resetButtonTitle: String = ""
+    resetButtonTitle: String = "",
+    encType:String = "multipart/form-data"
 )(implicit env: EnvironmentAll, request: Request[AnyContent])
 
-<form action="@action" method="@method" class="@cssClass" role="form">
+<form action="@action" method="@formMethod" class="@cssClass" role="form" enctype="@encType">
     <div class="form-group">
-        ?!for(
-            fld <- f.elements
-        ){
-            ?!field.render(fld)
-        }
+        @f.getAll.map{fld => @formField(fld,f)}
     </div>
     @if(saveButtonTitle.nonEmpty || resetButtonTitle.nonEmpty){
         <div class="form-group">

@@ -1,9 +1,0 @@
-@import base.controllers.EnvironmentAll
-@import base.MyConfigImplicit.MyConfig
-@*------------------------------------*@
-@(users: Seq[User])(implicit env: EnvironmentAll, request: Request[AnyContent])
-@main("Hello World!"){
-    @for(u<-users){
-        @u.name
-    }
-}

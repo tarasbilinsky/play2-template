@@ -17,7 +17,7 @@
         content: Html
 )(implicit env: EnvironmentAll, request: Request[AnyContent])
 @base.views.html.main(title,styles,scripts,headerOn,footerOn,jqueryOn,twbootstrapOn){
-    <nav class="navbar navbar-fixed-top navbar-light bg-faded">
+    <nav class="navbar navbar-light bg-faded"> @** navbar-fixed-top **@
         <a class="navbar-brand" href="#">@title</a>
         <ul class="nav navbar-nav">
             @for(
@@ -67,6 +67,7 @@
             <ul class="nav navbar-nav pull-xs-right">
                 <li class=nav-item>
                     <a class="nav-link" href="/logout">
+                        @** @user.id **@
                         @user.name
                         - @user.getPrimaryRole()
                         - Log Out

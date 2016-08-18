@@ -33,7 +33,7 @@ public abstract class UserSessionBase<T extends UserBase> extends ModelBase {
 
     public String getIdString(){
         return this.id.toString() + SEPARATOR_CHAR + this.getUser().id.toString();
-    };
+    }
 
     public static <S extends UserSessionBase> S restore(
             Class<S> sessionClass,
@@ -42,9 +42,9 @@ public abstract class UserSessionBase<T extends UserBase> extends ModelBase {
         String[] ids = id.split("\\Q" + SEPARATOR_CHAR + "\\E");
         Long sessionId = Long.parseLong(ids[0]);
         Long userId = Long.parseLong(ids[1]);
-        S session = Ebean.createQuery(sessionClass).select("*").fetch("user").fetch("user.primaryRole").fetch("user.roles").fetch("user.permissions").where().idEq(sessionId).eq("closed",0).findUnique();
+        S session = Ebean.createQuery(sessionClass).select("*").fetch("user","*").fetch("user.primaryUserRole").fetch("user.roles").fetch("user.permissions").where().idEq(sessionId).eq("closed",0).findUnique();
         if (session == null) {
-            session = sessionClass.getDeclaredConstructor(userClass).newInstance(Ebean.createQuery(userClass).select("*").fetch("primaryRole").fetch("roles").fetch("permissions").where().idEq(userId).findUnique());
+            session = sessionClass.getDeclaredConstructor(userClass).newInstance(Ebean.createQuery(userClass).select("*").fetch("primaryUserRole").fetch("roles").fetch("permissions").where().idEq(userId).findUnique());
         } else {
             session.setLast(System.currentTimeMillis());
             session.save();

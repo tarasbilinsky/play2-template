@@ -5,6 +5,9 @@ GET        /auth                             controllers.Application.auth(userNa
 GET        /login                            controllers.Application.login
 GET        /logout                           controllers.Application.logout
 
+
+POST       /saveUser                         controllers.Application.saveUser
+
 GET        /index2                           controllers.Application.index2
 GET        /index3                           controllers.Application.index3
 

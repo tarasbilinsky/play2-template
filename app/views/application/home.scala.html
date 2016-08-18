@@ -1,0 +1,8 @@
+@import base.controllers.EnvironmentAll
+@import base.MyConfigImplicit.MyConfig
+@import base.controllers.RequestWrapperForTemplates._
+@import base.viewHelpers.FormView
+@(f:  FormView[User])(implicit env: EnvironmentAll, request: Request[AnyContent])
+@main("Home"){
+    @base.views.html.form(f,"saveUser")
+}

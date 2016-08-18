@@ -6,8 +6,7 @@ import net.oltiv.scalaebean.Shortcuts._
 import play.twirl.api.Html
 import play.test.Helpers._
 import play.twirl.api.Content
-import org.avaje.agentloader
-import org.avaje.agentloader.AgentLoader
+
 import org.scalacheck.Properties
 import org.scalatest.TestData
 import play.api.cache.EhCacheModule

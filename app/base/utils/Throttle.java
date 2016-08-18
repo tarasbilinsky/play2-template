@@ -6,8 +6,8 @@ import java.util.concurrent.atomic.AtomicLong;
 
 
 public class Throttle {
-    public static enum Result{
-        Proceed,Stop,OverLimit;
+    public enum Result{
+        Proceed,Stop,OverLimit
     }
 
     private final AtomicLong counter;

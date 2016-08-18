@@ -25,6 +25,7 @@ package object viewHelpers {
       def isDate = isOfType[Date]
       def isInt = isOfType[java.lang.Integer] || x == java.lang.Integer.TYPE
       def isNumber = isOfType[java.lang.Double] || isOfType[java.lang.Float] || x == java.lang.Double.TYPE || x == java.lang.Float.TYPE
+      def isString = isOfType[String]
     }
   }
   import ClassAdditions._

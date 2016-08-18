@@ -21,8 +21,10 @@ libraryDependencies ++= Seq(
   cache,
   ws,
 
-  "net.oltiv" % "scala-ebean-macros" % "0.1.9",
-  "org.avaje.ebeanorm" % "avaje-ebeanorm" % "7.16.1",
+  "net.oltiv" % "scala-ebean-macros" % "0.1.11",
+  //"org.avaje.ebean" % "ebean" % "8.2.1",
+  //"org.avaje.ebean" % "ebean-agent" % "8.1.1",
+  //"org.avaje" % "avaje-datasource" % "1.1.4",
 
   "mysql" % "mysql-connector-java" % "5.1.38",
 
@@ -39,7 +41,9 @@ libraryDependencies ++= Seq(
   "org.scalamock" %% "scalamock-scalatest-support" % "3.2.2" % "test",
   "org.scalatestplus.play" %% "scalatestplus-play" % "1.5.0" % "test",
   "org.scalacheck" %% "scalacheck" % "1.13.0" % "test",
-  "org.avaje" % "avaje-agentloader" % "2.1.2" % "test",
+
+  "org.avaje.ebeanorm" % "avaje-ebeanorm-agent" % "8.1.1",
+
 
   "com.ibm.icu" % "icu4j" % "54.1.1"
 )
